@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 
 /** Render public navigation for guests and locally signed-in readers.
@@ -7,7 +8,7 @@ import { Link } from 'react-router-dom';
  */
 export default function PublicNavbar({ session }) {
   const signedInUser = session?.user || session;
-  const displayName = signedInUser?.name || signedInUser?.username || '';
+  const displayName = signedInUser?.displayName || signedInUser?.name || signedInUser?.username || '';
   const role = String(signedInUser?.role || '').toLowerCase();
   const dashboardPath = role === 'admin' ? '/admin' : '/blogs';
   const initials = displayName
@@ -50,5 +51,24 @@ export default function PublicNavbar({ session }) {
     </header>
   );
 }
+
+PublicNavbar.propTypes = {
+  session: PropTypes.oneOfType([
+    PropTypes.shape({
+      userId: PropTypes.string,
+      username: PropTypes.string,
+      displayName: PropTypes.string,
+      role: PropTypes.oneOf(['admin', 'user']),
+    }),
+    PropTypes.shape({
+      user: PropTypes.shape({
+        displayName: PropTypes.string,
+        name: PropTypes.string,
+        username: PropTypes.string,
+        role: PropTypes.oneOf(['admin', 'user']),
+      }),
+    }),
+  ]),
+};
 
 
