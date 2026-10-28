@@ -35,7 +35,15 @@ function readArray(key) {
       return memoryStore[key];
     }
 
-    const parsedValue = JSON.parse(rawValue);
+    let parsedValue;
+    try {
+      parsedValue = JSON.parse(rawValue);
+    } catch (error) {
+      warnStorage();
+      memoryStore[key] = [];
+      return memoryStore[key];
+    }
+
     if (!Array.isArray(parsedValue)) {
       warnStorage();
       memoryStore[key] = [];
@@ -61,7 +69,15 @@ function readSession() {
       return memoryStore[STORAGE_KEYS.session];
     }
 
-    const parsedValue = JSON.parse(rawValue);
+    let parsedValue;
+    try {
+      parsedValue = JSON.parse(rawValue);
+    } catch (error) {
+      warnStorage();
+      memoryStore[STORAGE_KEYS.session] = null;
+      return null;
+    }
+
     if (!parsedValue || typeof parsedValue !== 'object' || Array.isArray(parsedValue)) {
       warnStorage();
       memoryStore[STORAGE_KEYS.session] = null;
@@ -157,6 +173,7 @@ export function clearSession() {
   try {
     window.localStorage.removeItem(STORAGE_KEYS.session);
   } catch (error) {
+    memoryOnlyKeys.add(STORAGE_KEYS.session);
     warnStorage();
   }
 }

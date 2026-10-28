@@ -38,8 +38,10 @@ describe('WriteSpace public home', () => {
   });
 
   it('shows the public introduction, guest links, feature explanations, and empty message', () => {
-    renderApp();
+    const { container } = renderApp();
 
+    expect(container.firstChild).toHaveClass('bg-[#fbfaf7]');
+    expect(container.querySelector('section[aria-labelledby="hero-title"]')).toHaveClass('min-h-[100dvh]');
     expect(screen.getByRole('link', { name: 'WriteSpace home' })).toHaveAttribute('href', '/');
     expect(screen.getByRole('heading', { name: 'WriteSpace' })).toBeInTheDocument();
     expect(screen.getByText('Your thoughts. Your space. Beautifully simple.')).toBeInTheDocument();

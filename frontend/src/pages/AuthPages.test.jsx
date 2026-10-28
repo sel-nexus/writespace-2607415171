@@ -39,6 +39,7 @@ describe('authentication pages', () => {
     const user = userEvent.setup();
     renderRoute('/login');
 
+    expect(screen.getByRole('main')).toHaveClass('bg-[#fbfaf7]');
     expect(screen.getByRole('note', { name: 'Demo security notice' })).toHaveTextContent(/plain text/i);
     await user.type(screen.getByLabelText('Username'), 'unknown');
     await user.type(screen.getByLabelText('Password'), 'incorrect');

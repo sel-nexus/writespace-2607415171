@@ -69,14 +69,14 @@ test('administrator creates and removes a unique user while authored posts remai
 
   await expect(page.getByRole('heading', { name: 'Manage users' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Delete WriteSpace Administrator' }).first()).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Delete Ari Writer' }).first()).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Delete Ari Writer' }).first()).toBeEnabled();
   await page.getByLabel('Display Name').fill('Taylor Writer');
   await page.getByLabel('Username').fill('taylor');
   await page.getByLabel('Password').fill('demo-only');
   await page.getByLabel('Role').selectOption('user');
   await page.getByRole('button', { name: 'Create account' }).click();
   await expect(page.getByRole('status')).toContainText('Taylor Writer was added as a user.');
-  await expect(page.getByRole('button', { name: 'Delete Taylor Writer' }).first()).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Delete Taylor Writer' }).first()).toBeEnabled();
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('writespace_users')).some((user) => user.username === 'taylor'))).toBe(true);
 
   page.once('dialog', (dialog) => dialog.accept());
@@ -87,7 +87,7 @@ test('administrator creates and removes a unique user while authored posts remai
   assertNoErrors();
 });
 
-test('standard user is redirected away from admin dashboard and user management', async ({ page }) => {
+test('standard user is redirected from the admin dashboard route', async ({ page }) => {
   const assertNoErrors = monitorErrors(page);
   await page.addInitScript(() => {
     localStorage.setItem('writespace_session', JSON.stringify({ userId: 'writer-1', username: 'ari', displayName: 'Ari Writer', role: 'user' }));
@@ -95,6 +95,14 @@ test('standard user is redirected away from admin dashboard and user management'
   await page.goto('/admin');
   await expect(page).toHaveURL(/\/blogs$/);
   await expect(page.getByRole('heading', { name: 'All Blogs' })).toBeVisible();
+  assertNoErrors();
+});
+
+test('standard user is redirected from the user-management route', async ({ page }) => {
+  const assertNoErrors = monitorErrors(page);
+  await page.addInitScript(() => {
+    localStorage.setItem('writespace_session', JSON.stringify({ userId: 'writer-1', username: 'ari', displayName: 'Ari Writer', role: 'user' }));
+  });
   await page.goto('/users');
   await expect(page).toHaveURL(/\/blogs$/);
   await expect(page.getByRole('heading', { name: 'All Blogs' })).toBeVisible();

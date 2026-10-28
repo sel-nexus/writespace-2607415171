@@ -22,6 +22,8 @@ function captureBrowserErrors(page) {
 test('guest discovers WriteSpace and sees reading and registration destinations', async ({ page }) => {
   const assertNoBrowserErrors = captureBrowserErrors(page);
   await page.goto('/');
+  await expect(page.locator('#root > div')).toHaveCSS('background-color', 'rgb(251, 250, 247)');
+  await expect(page.locator('section[aria-labelledby="hero-title"]')).toHaveCSS('background-image', 'none');
 
   await expect(page.getByRole('heading', { name: 'WriteSpace' })).toBeVisible();
   await expect(page.getByText('Your thoughts. Your space. Beautifully simple.')).toBeVisible();
@@ -29,7 +31,7 @@ test('guest discovers WriteSpace and sees reading and registration destinations'
   await expect(page.getByText('No posts yet - check back soon!')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Start reading' })).toHaveAttribute('href', '/login');
   await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Get started' })).toHaveAttribute('href', '/register');
-
+  await page.screenshot({ path: 'test-results/discovery-desktop-landing.png', fullPage: true });
 
   assertNoBrowserErrors();
 });
@@ -51,7 +53,6 @@ test('locally signed-in admin sees the newest local story and admin links', asyn
   await expect(page.getByRole('link', { name: 'Newest local story' })).toHaveAttribute('href', '/blog/new');
   await expect(page.getByText('Saved on this device.')).toBeVisible();
 
-
   assertNoBrowserErrors();
 });
 
@@ -70,10 +71,11 @@ test('signed-in readers see their reading dashboard and the home remains usable 
   await expect(page.getByRole('link', { name: 'Start reading' })).toHaveAttribute('href', '/blogs');
   await expect(page.getByRole('heading', { name: 'Space for the words that matter.' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Footer navigation' })).toBeVisible();
+  await page.screenshot({ path: 'test-results/discovery-mobile-landing.png', fullPage: true });
   assertNoBrowserErrors();
 });
 
- test('continues with a visible warning when browser storage is unavailable', async ({ page }) => {
+test('continues with a visible warning when browser storage is unavailable', async ({ page }) => {
   const assertNoBrowserErrors = captureBrowserErrors(page);
   await page.addInitScript(() => {
     Object.defineProperty(window, 'localStorage', {

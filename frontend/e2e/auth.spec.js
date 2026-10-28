@@ -22,6 +22,7 @@ function monitorErrors(page) {
 test('visitor registers a local standard account and sees the persisted identity', async ({ page }) => {
   const assertNoErrors = monitorErrors(page);
   await page.goto('/register');
+  await expect(page.locator('main')).toHaveCSS('background-color', 'rgb(251, 250, 247)');
   await expect(page.getByRole('note', { name: 'Demo security notice' })).toContainText('plain text');
   await page.getByLabel('Display Name').fill('Quinn Writer');
   await page.getByLabel('Username').fill('quinn');
@@ -39,6 +40,7 @@ test('visitor registers a local standard account and sees the persisted identity
 test('built-in admin signs in and invalid credentials remain an inline error', async ({ page }) => {
   const assertNoErrors = monitorErrors(page);
   await page.goto('/login');
+  await expect(page.locator('main')).toHaveCSS('background-color', 'rgb(251, 250, 247)');
   await page.getByLabel('Username').fill('invalid');
   await page.getByLabel('Password').fill('wrong');
   await page.getByRole('button', { name: 'Login' }).click();
@@ -52,6 +54,7 @@ test('built-in admin signs in and invalid credentials remain an inline error', a
 });
 
 test('registration rejects duplicate names and mismatched password confirmation', async ({ page }) => {
+  const assertNoErrors = monitorErrors(page);
   await page.addInitScript(() => {
     localStorage.setItem('writespace_users', JSON.stringify([
       { id: 'existing', displayName: 'Casey', username: 'casey', password: 'local', role: 'user' },
@@ -67,9 +70,11 @@ test('registration rejects duplicate names and mismatched password confirmation'
   await expect(page.getByText('That username is already taken.')).toBeVisible();
   await expect(page.getByText('Passwords do not match.')).toBeVisible();
   await expect(page).toHaveURL(/\/register$/);
+  assertNoErrors();
 });
 
 test('logout clears the local session and returns the visitor home', async ({ page }) => {
+  const assertNoErrors = monitorErrors(page);
   await page.addInitScript(() => {
     localStorage.setItem('writespace_session', JSON.stringify({ userId: 'u-1', username: 'ari', displayName: 'Ari Reader', role: 'user' }));
   });
@@ -77,4 +82,5 @@ test('logout clears the local session and returns the visitor home', async ({ pa
   await page.getByRole('button', { name: 'Logout' }).click();
   await expect(page).toHaveURL('/');
   await expect.poll(() => page.evaluate(() => localStorage.getItem('writespace_session'))).toBeNull();
+  assertNoErrors();
 });

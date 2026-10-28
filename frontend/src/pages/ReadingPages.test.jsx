@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App.jsx';
-import { clearSession, savePosts, saveUsers, setSession } from '../utils/storage.js';
+import { clearSession, getPosts, savePosts, saveUsers, setSession } from '../utils/storage.js';
 
 /** Display the current route for deterministic client navigation assertions. */
 function RouteProbe() {
@@ -120,6 +120,20 @@ describe('authenticated blog reading', () => {
     expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Back to All Posts' })).toHaveLength(2);
+  });
+
+  it('renders large plain-text post content verbatim and keeps markup-like input inert', () => {
+    const content = `${'A long plain-text passage. '.repeat(1024)}\n<script>window.compromised = true;</script><img src=x onerror="window.compromised = true">`;
+    savePosts([{ ...ownPost, content }]);
+
+    const { container } = renderRoute('/blog/own-post');
+    const body = container.querySelector('article p.whitespace-pre-wrap');
+
+    expect(body).not.toBeNull();
+    expect(body.textContent).toBe(content);
+    expect(getPosts()).toEqual([{ ...ownPost, content }]);
+    expect(container.querySelector('article script, article img')).toBeNull();
+    expect(window.compromised).toBeUndefined();
   });
 
   it('shows a not-found message and a list back link for a missing post id', () => {

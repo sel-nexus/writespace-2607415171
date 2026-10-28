@@ -50,6 +50,16 @@ describe('local plain-text posts', () => {
     expect(getPosts()).toEqual([result.post]);
   });
 
+  it('preserves large plain-text content exactly in the saved post', () => {
+    const content = 'A long plain-text paragraph. '.repeat(1024);
+    const result = createPost({ title: 'Long entry', content }, writer);
+
+    expect(result.success).toBe(true);
+    expect(result.post.content).toBe(content);
+    expect(getPosts()).toEqual([result.post]);
+    expect(JSON.parse(localStorage.getItem('writespace_posts'))[0].content).toBe(content);
+  });
+
   it('rejects unauthenticated or invalid-role create attempts and does not persist data', () => {
     expect(createPost({ title: 'A title', content: 'Body' }, null)).toEqual({ success: false, error: 'Sign in before writing a post.' });
     expect(createPost({ title: 'A title', content: 'Body' }, { userId: 'x', role: 'guest' })).toEqual({ success: false, error: 'Sign in before writing a post.' });
@@ -87,6 +97,7 @@ describe('local plain-text posts', () => {
     expect(getPosts()).toEqual(beforeUnauthorized);
     expect(updatePost('absent', { title: 'Title', content: 'Body' }, admin)).toEqual({ success: false, error: 'Post not found.' });
     expect(updatePost('post-1', { title: '', content: 'Body' }, admin).errors).toEqual({ title: 'Title is required.' });
+    expect(getPosts()).toEqual(beforeUnauthorized);
   });
 
   it('deletes posts for owners or admins and denies unauthorized or missing-id deletes', () => {

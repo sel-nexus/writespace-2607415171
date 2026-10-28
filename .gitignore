@@ -9,6 +9,8 @@ __pycache__/
 .env.local
 .env.*.local
 coverage/
+frontend/test-results/
+frontend/playwright-report/
 .DS_Store
 PLAN.md
 todos.yaml

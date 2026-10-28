@@ -47,6 +47,7 @@ test('author creates, edits, and deletes a local post through the reader', async
 });
 
 test('a writer cannot edit or delete another author’s post', async ({ page }) => {
+  const assertNoErrors = monitorErrors(page);
   await page.addInitScript(() => {
     localStorage.setItem('writespace_session', JSON.stringify({ userId: 'writer-2', username: 'riley', displayName: 'Riley Writer', role: 'user' }));
     localStorage.setItem('writespace_posts', JSON.stringify([
@@ -56,8 +57,10 @@ test('a writer cannot edit or delete another author’s post', async ({ page }) 
   await page.goto('/edit/writer-one-post');
   await expect(page).toHaveURL(/\/blogs$/);
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('writespace_posts'))[0].title)).toBe('Private to its author');
-  await page.goto('/blog/writer-one-post');
+  await page.getByRole('link', { name: 'Private to its author' }).click();
+  await expect(page).toHaveURL('/blog/writer-one-post');
   await expect(page.getByRole('heading', { name: 'Private to its author' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Edit' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Delete' })).toHaveCount(0);
+  assertNoErrors();
 });

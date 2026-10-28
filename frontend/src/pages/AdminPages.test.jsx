@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -99,13 +99,54 @@ describe('administrator pages', () => {
   it('rejects duplicate usernames without changing saved account data', async () => {
     const user = userEvent.setup();
     renderRoute('/users');
+    const usersBefore = getUsers();
     await user.type(screen.getByLabelText('Display Name'), 'Another Ari');
     await user.type(screen.getByLabelText('Username'), 'ARI');
     await user.type(screen.getByLabelText('Password'), 'plain-demo');
     await user.click(screen.getByRole('button', { name: 'Create account' }));
 
     expect(screen.getByText('That username is already taken.')).toBeInTheDocument();
-    expect(getUsers()).toHaveLength(3);
+    expect(getUsers()).toEqual(usersBefore);
+  });
+
+  it('displays script- and image-like account values as inert React text', () => {
+    const displayName = '<img src=x onerror="window.compromised = true">';
+    const username = '<script>window.compromised = true;</script>';
+    saveUsers([...getUsers(), {
+      id: 'markup-user',
+      displayName,
+      username,
+      password: 'demo',
+      role: 'user',
+      createdAt: '2026-02-04T12:00:00.000Z',
+    }]);
+
+    const { container } = renderRoute('/users');
+
+    expect(screen.getAllByText(displayName, { exact: true })).toHaveLength(2);
+    expect(screen.getAllByText(`@${username}`, { exact: true })).toHaveLength(2);
+    expect(container.querySelector('img[src="x"], script')).toBeNull();
+    expect(window.compromised).toBeUndefined();
+    expect(getUsers().at(-1)).toMatchObject({ id: 'markup-user', displayName, username });
+  });
+
+  it('accepts and saves reasonable long account input through the administrator form', async () => {
+    const user = userEvent.setup();
+    const displayName = 'Taylor Longname '.repeat(20).trim();
+    const username = `reader${'x'.repeat(120)}`;
+    const password = 'long-demo-password-'.repeat(8);
+    vi.stubGlobal('crypto', { randomUUID: vi.fn(() => 'long-form-user') });
+    renderRoute('/users');
+
+    fireEvent.change(screen.getByLabelText('Display Name'), { target: { value: displayName } });
+    fireEvent.change(screen.getByLabelText('Username'), { target: { value: username } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: password } });
+    await user.click(screen.getByRole('button', { name: 'Create account' }));
+
+    expect(getUsers()).toContainEqual(expect.objectContaining({
+      id: 'long-form-user', displayName, username, password, role: 'user',
+    }));
+    expect(screen.getByRole('status')).toHaveTextContent(`${displayName} was added as a user.`);
   });
 
   it('disables default-admin and self-delete, while confirmed deletion preserves authored posts', async () => {

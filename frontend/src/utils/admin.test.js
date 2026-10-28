@@ -78,6 +78,29 @@ describe('administrator account and dashboard operations', () => {
     expect(validateManagedUser({ displayName: 'Ari', username: 'ari', password: 'pw', role: 'owner' }).role).toBe('Choose a valid account role.');
   });
 
+  it('accepts and persists reasonable long account fields without imposing an unconfigured size limit', () => {
+    const form = {
+      displayName: 'Long Display Name '.repeat(24),
+      username: `reader${'x'.repeat(120)}`,
+      password: 'long-demo-password-'.repeat(8),
+      role: 'user',
+    };
+    vi.stubGlobal('crypto', { randomUUID: vi.fn(() => 'long-account-id') });
+
+    expect(validateManagedUser(form)).toEqual({});
+    const result = createManagedUser(form, administrator);
+
+    expect(result.success).toBe(true);
+    expect(result.user).toMatchObject({
+      id: 'long-account-id',
+      displayName: form.displayName.trim(),
+      username: form.username,
+      password: form.password,
+      role: 'user',
+    });
+    expect(getUsers()).toEqual([result.user]);
+  });
+
   it('requires an administrator and persists a valid new admin account with a UUID and timestamp', () => {
     vi.stubGlobal('crypto', { randomUUID: vi.fn(() => 'new-admin-id') });
     vi.setSystemTime(new Date('2026-04-20T08:30:00.000Z'));
@@ -97,13 +120,14 @@ describe('administrator account and dashboard operations', () => {
   });
 
   it('does not persist invalid admin account creation requests', () => {
-    const duplicate = createManagedUser({ displayName: 'Another Ari', username: 'ari', password: 'pw', role: 'user' }, administrator, storedUsers);
+    saveUsers(storedUsers);
+    const duplicate = createManagedUser({ displayName: 'Another Ari', username: 'ari', password: 'pw', role: 'user' }, administrator);
     const invalid = createManagedUser({ displayName: '', username: '', password: '', role: 'guest' }, administrator);
 
     expect(duplicate.success).toBe(false);
     expect(duplicate.errors.username).toBe('That username is already taken.');
     expect(invalid.success).toBe(false);
-    expect(getUsers()).toEqual([]);
+    expect(getUsers()).toEqual(storedUsers);
   });
 
   it('rejects unauthorized, default-admin, self, and missing-user deletion requests', () => {
