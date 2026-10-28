@@ -7,6 +7,8 @@ import PostEditorPage from './pages/PostEditorPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import BlogsPage from './pages/BlogsPage.jsx';
 import BlogReaderPage from './pages/BlogReaderPage.jsx';
+import AdminDashboardPage from './pages/AdminDashboardPage.jsx';
+import UsersPage from './pages/UsersPage.jsx';
 
 /** Render public routes and role-protected browser-local content routes. */
 export default function App() {
@@ -19,8 +21,8 @@ export default function App() {
       <Route element={<ProtectedRoute><BlogReaderPage /></ProtectedRoute>} path="/blog/:id" />
       <Route element={<ProtectedRoute><PostEditorPage /></ProtectedRoute>} path="/write" />
       <Route element={<ProtectedRoute><PostEditorPage /></ProtectedRoute>} path="/edit/:id" />
-      <Route element={<ProtectedRoute requiredRole="admin"><NotFoundPage title="Administrator page not found" /></ProtectedRoute>} path="/admin" />
-      <Route element={<ProtectedRoute requiredRole="admin"><NotFoundPage title="User management page not found" /></ProtectedRoute>} path="/users" />
+      <Route element={<ProtectedRoute requiredRole="admin"><AdminDashboardPage /></ProtectedRoute>} path="/admin" />
+      <Route element={<ProtectedRoute requiredRole="admin"><UsersPage /></ProtectedRoute>} path="/users" />
       <Route element={<NotFoundPage />} path="*" />
     </Routes>
   );
