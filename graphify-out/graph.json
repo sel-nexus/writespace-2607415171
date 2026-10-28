@@ -4036,7 +4036,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "frontend/src/pages/LandingPage.jsx",
-      "source_location": "L117",
+      "source_location": "L128",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -4047,7 +4047,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "frontend/src/pages/LandingPage.jsx",
-      "source_location": "L160",
+      "source_location": "L172",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -8411,7 +8411,7 @@
     }
   ],
   "metadata": {
-    "built_at": "2026-10-28T10:05:43.524479+00:00",
+    "built_at": "2026-10-28T10:11:45.680753+00:00",
     "version": "graph_update-v1",
     "codebase_root": "C:\\artifacts-v2\\T0132PcJVCRTV000428102607415171\\developer",
     "force": true,
