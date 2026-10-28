@@ -86,6 +86,32 @@
       "_origin": "ast"
     },
     {
+      "id": "frontend_e2e_preflight_spec",
+      "label": "preflight.spec.js",
+      "file_type": "code",
+      "source_file": "frontend/e2e/preflight.spec.js",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "frontend_e2e_preflight_spec_monitorerrors",
+      "label": "monitorErrors()",
+      "file_type": "code",
+      "source_file": "frontend/e2e/preflight.spec.js",
+      "source_location": "L11",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "frontend_e2e_preflight_spec_capturepageevidence",
+      "label": "capturePageEvidence()",
+      "file_type": "code",
+      "source_file": "frontend/e2e/preflight.spec.js",
+      "source_location": "L29",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
       "id": "frontend_e2e_reading_spec",
       "label": "reading.spec.js",
       "file_type": "code",
@@ -1958,6 +1984,59 @@
       "confidence": "EXTRACTED",
       "source_file": "frontend/e2e/discovery.spec.js",
       "source_location": "L23",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "frontend_e2e_preflight_spec",
+      "target": "ref_playwright_test",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/e2e/preflight.spec.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "frontend_e2e_preflight_spec",
+      "target": "frontend_e2e_preflight_spec_monitorerrors",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/e2e/preflight.spec.js",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "frontend_e2e_preflight_spec",
+      "target": "frontend_e2e_preflight_spec_capturepageevidence",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/e2e/preflight.spec.js",
+      "source_location": "L29",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "frontend_e2e_preflight_spec",
+      "target": "frontend_e2e_preflight_spec_monitorerrors",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/e2e/preflight.spec.js",
+      "source_location": "L47",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "frontend_e2e_preflight_spec",
+      "target": "frontend_e2e_preflight_spec_capturepageevidence",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/e2e/preflight.spec.js",
+      "source_location": "L67",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -8411,10 +8490,10 @@
     }
   ],
   "metadata": {
-    "built_at": "2026-10-28T10:11:45.680753+00:00",
+    "built_at": "2026-10-28T11:05:03.218701+00:00",
     "version": "graph_update-v1",
     "codebase_root": "C:\\artifacts-v2\\T0132PcJVCRTV000428102607415171\\developer",
     "force": true,
-    "files_scanned": 46
+    "files_scanned": 47
   }
 }
