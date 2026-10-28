@@ -10,7 +10,8 @@ describe('WriteSpace application shell', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('heading', { name: 'A home for your words.' })).toBeInTheDocument();
-    expect(screen.getByText(/stored in this browser/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'WriteSpace' })).toBeInTheDocument();
+    expect(screen.getByText('Your thoughts. Your space. Beautifully simple.')).toBeInTheDocument();
+    expect(screen.getByText('A quiet, local place to read and publish plain-text writing, stored only in this browser.')).toBeInTheDocument();
   });
 });
