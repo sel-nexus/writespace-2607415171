@@ -89,6 +89,18 @@ describe('authenticated blog reading', () => {
     expect(within(postCards).queryByRole('link', { name: 'Edit Another writer’s view' })).not.toBeInTheDocument();
   });
 
+  it('opens the mobile navigation menu and exposes authenticated page links', async () => {
+    const user = userEvent.setup();
+    renderRoute('/blogs');
+
+    const menuButton = screen.getByRole('button', { name: 'Open navigation menu' });
+    expect(menuButton).toHaveAttribute('aria-expanded', 'false');
+    await user.click(menuButton);
+    expect(screen.getByRole('button', { name: 'Close navigation menu' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getAllByRole('link', { name: 'All Blogs' })).toHaveLength(2);
+    expect(screen.getAllByRole('link', { name: 'Write' })).toHaveLength(2);
+  });
+
   it('shows the useful empty state and write action when there are no posts', () => {
     savePosts([]);
     renderRoute('/blogs');
