@@ -56,6 +56,24 @@ describe('post editor', () => {
     expect(getPosts()).toEqual([]);
   });
 
+  it('accepts a 140-character title and prevents typing beyond the limit', async () => {
+    const user = userEvent.setup();
+    savePosts([]);
+    renderRoute('/write');
+
+    const titleInput = screen.getByLabelText('Title');
+    const titleAtLimit = 'a'.repeat(140);
+    expect(titleInput).toHaveAttribute('maxLength', '140');
+
+    await user.type(titleInput, titleAtLimit);
+    expect(titleInput).toHaveValue(titleAtLimit);
+    expect(titleInput.value).toHaveLength(140);
+
+    await user.type(titleInput, ' beyond the limit');
+    expect(titleInput).toHaveValue(titleAtLimit);
+    expect(titleInput.value).toHaveLength(140);
+  });
+
   it('creates and saves a valid post, then routes to the new reader page', async () => {
     const user = userEvent.setup();
     vi.stubGlobal('crypto', { randomUUID: vi.fn(() => 'new-post-id') });
