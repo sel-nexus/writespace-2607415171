@@ -63,7 +63,7 @@ test('captures representative desktop and mobile WriteSpace interface evidence',
   });
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'WriteSpace' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'A story saved in this browser' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'A story saved in this browser', exact: true })).toBeVisible();
   await capturePageEvidence(page, testInfo, 'preflight-landing-desktop');
 
   await page.setViewportSize({ width: 390, height: 844 });

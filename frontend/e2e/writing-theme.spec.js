@@ -40,7 +40,8 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 375, height: 812 
     await page.getByRole('button', { name: 'Publish post' }).click();
     await expect(page.getByText('Title is required.')).toHaveCSS('color', 'rgb(252, 165, 165)');
     await expect(page.getByText('Content is required.')).toBeVisible();
-    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('writespace_posts')))).toEqual([]);
+    // Rejected drafts must not create even an empty persisted record.
+    expect(await page.evaluate(() => localStorage.getItem('writespace_posts'))).toBeNull();
 
     const title = 'Writing after sunset';
     const content = 'A long plain-text passage. '.repeat(2048) + '\nSecond paragraph.';
@@ -80,7 +81,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 375, height: 812 
     await page.getByRole('button', { name: 'Save changes' }).click();
     const revised = { ...original, title: 'Revised after sunset', content: revisedContent };
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem('writespace_posts')))).toEqual([revised]);
-    await page.getByRole('link', { name: 'Back to All Posts' }).click();
+    await page.getByRole('link', { name: 'Back to All Posts', exact: true }).first().click();
     await page.getByRole('link', { name: 'Revised after sunset', exact: true }).click();
     await expect(page.locator('article p.whitespace-pre-wrap')).toHaveText(revisedContent);
     await page.screenshot({ path: testInfo.outputPath('dark-writing-reader.png'), fullPage: true });

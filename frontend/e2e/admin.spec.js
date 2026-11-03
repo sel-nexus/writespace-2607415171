@@ -43,12 +43,12 @@ test('administrator dashboard shows distinct local totals and the five newest po
 
   await expect(page.getByRole('heading', { name: 'Community overview' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Total Posts' }).locator('..')).toContainText('6');
-  await expect(page.getByRole('heading', { name: 'Total Users' }).locator('..')).toContainText('3');
+  await expect(page.getByRole('heading', { name: 'Total Users', exact: true }).locator('..')).toContainText('3');
   await expect(page.getByRole('heading', { name: 'Total Admins' }).locator('..')).toContainText('2');
-  await expect(page.getByRole('heading', { name: 'Total users' }).locator('..')).toContainText('2');
+  await expect(page.getByRole('heading', { name: 'Total users', exact: true }).locator('..')).toContainText('2');
   const recentPosts = page.getByRole('region', { name: 'Recent posts' });
   await expect(recentPosts.getByRole('article')).toHaveCount(5);
-  await expect(recentPosts.getByRole('link', { name: 'Community post 6' })).toHaveAttribute('href', '/blog/admin-post-6');
+  await expect(recentPosts.getByRole('link', { name: 'Community post 6', exact: true })).toHaveAttribute('href', '/blog/admin-post-6');
   await expect(recentPosts.getByRole('link', { name: 'Community post 1' })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Write New Post' })).toHaveAttribute('href', '/write');
   await expect(page.getByRole('link', { name: 'Manage Users' })).toHaveAttribute('href', '/users');

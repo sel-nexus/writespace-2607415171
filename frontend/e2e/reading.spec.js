@@ -40,11 +40,11 @@ test('authenticated author browses newest posts and reads full whitespace-preser
   await page.goto('/blogs');
 
   await expect(page.getByRole('heading', { name: 'All Blogs' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Newest essay' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Newest essay' })).toHaveAttribute('href', '/blog/newest');
-  await page.getByRole('link', { name: 'Newest essay' }).click();
+  await expect(page.getByRole('heading', { name: 'Newest essay', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Newest essay', exact: true })).toHaveAttribute('href', '/blog/newest');
+  await page.getByRole('link', { name: 'Newest essay', exact: true }).click();
   await expect(page).toHaveURL(/\/blog\/newest$/);
-  await expect(page.getByRole('heading', { name: 'Newest essay' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Newest essay', exact: true })).toBeVisible();
   await expect(page.getByText('First paragraph.\n\nSecond paragraph stays separate.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Delete' })).toBeVisible();
   assertNoErrors();

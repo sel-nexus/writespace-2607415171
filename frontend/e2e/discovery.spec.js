@@ -27,7 +27,7 @@ test('guest discovers WriteSpace and sees reading and registration destinations'
 
   await expect(page.getByRole('heading', { name: 'WriteSpace' })).toBeVisible();
   await expect(page.getByText('Your thoughts. Your space. Beautifully simple.')).toBeVisible();
-  await expect(page.getByText(/stored only in this browser/i)).toBeVisible();
+  await expect(page.getByText(/^Your posts are stored only in this browser,/)).toBeVisible();
   await expect(page.getByText('No posts yet - check back soon!')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Start reading' })).toHaveAttribute('href', '/login');
   await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Get started' })).toHaveAttribute('href', '/register');
@@ -72,19 +72,19 @@ test('locally signed-in admin sees the newest local story and admin links', asyn
   await expect(page.getByText('Morgan Admin')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('href', '/admin');
   await expect(page.getByRole('link', { name: 'Start reading' })).toHaveAttribute('href', '/blogs');
-  await expect(page.getByRole('link', { name: 'Newest local story' })).toHaveAttribute('href', '/blog/new');
+  await expect(page.getByRole('link', { name: 'Newest local story', exact: true })).toHaveAttribute('href', '/blog/new');
   await expect(page.getByRole('complementary', { name: 'Local writing preview' }).getByText('Saved on this device.', { exact: true })).toBeVisible();
   for (const name of ['Newest local story', 'Read Newest local story']) {
     await page.getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(/\/blog\/new$/);
-    await expect(page.getByRole('heading', { name: 'Newest local story' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Newest local story', exact: true })).toBeVisible();
     await expect(page.locator('article p.whitespace-pre-wrap')).toHaveText('The full newest story from this browser.');
     await expect(page.locator('article')).toContainText('Local Writer');
     await page.getByRole('link', { name: 'WriteSpace home' }).click();
   }
   await page.getByRole('link', { name: 'Start reading' }).click();
   await expect(page).toHaveURL(/\/blogs$/);
-  await expect(page.getByRole('heading', { name: 'Newest local story' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Newest local story', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'WriteSpace home' }).click();
   await page.getByRole('link', { name: 'Dashboard', exact: true }).click();
   await expect(page).toHaveURL(/\/admin$/);

@@ -41,12 +41,12 @@ for (const width of [1280, 375]) {
     await page.getByLabel('Title').fill('Dark community activity');
     await page.getByLabel('Content').fill('A persisted community update from the administrator.');
     await page.getByRole('button', { name: 'Publish post' }).click();
-    await expect(page.getByRole('heading', { name: 'Dark community activity' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Dark community activity', exact: true })).toBeVisible();
     await page.getByRole('link', { name: 'WriteSpace home' }).click();
     await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Dashboard' }).click();
     const activity = page.getByRole('region', { name: 'Recent posts' });
     await expect(activity.getByRole('article')).toHaveCount(1);
-    await expect(activity.getByRole('link', { name: 'Dark community activity' })).toBeVisible();
+    await expect(activity.getByRole('link', { name: 'Dark community activity', exact: true })).toBeVisible();
     await expect(activity.getByRole('article').locator('..')).toHaveCSS('background-color', 'rgb(15, 23, 42)');
     await expect(page.getByRole('heading', { name: 'Total Posts', exact: true }).locator('..').getByRole('status')).toHaveText('1');
 
