@@ -6,7 +6,7 @@ import { createPost, findPost, updatePost } from '../utils/posts.js';
 import { getPosts, getStorageWarning } from '../utils/storage.js';
 
 /** Render a validated create or ownership-aware edit form for plain-text posts. */
-export default function PostEditorPage() {
+export default function PostEditorPage({ theme = 'light', onToggleTheme } = {}) {
   const { id } = useParams();
   const navigate = useNavigate();
   const session = getCurrentSession();
@@ -51,7 +51,7 @@ export default function PostEditorPage() {
   if (editing && !originalPost) {
     return (
       <div className="min-h-[100dvh] bg-[#fbfaf7] text-stone-900">
-        <Navbar session={session} />
+        <Navbar session={session} theme={theme} onToggleTheme={onToggleTheme} />
         <main className="mx-auto max-w-3xl px-5 py-16 sm:px-8">
           <h1 className="font-display text-4xl font-medium">Post not found</h1>
           <p className="mt-3 text-stone-600">This post is not saved in this browser.</p>
@@ -68,7 +68,7 @@ export default function PostEditorPage() {
 
   return (
     <div className="min-h-[100dvh] bg-[#fbfaf7] text-stone-900">
-      <Navbar session={session} />
+      <Navbar session={session} theme={theme} onToggleTheme={onToggleTheme} />
       {warning && (
         <p
           className="border-b border-amber-300 bg-amber-50 px-5 py-3 text-center text-sm text-amber-950"

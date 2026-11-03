@@ -30,7 +30,7 @@ function formatDate(date) {
 }
 
 /** Render administrator activity metrics and the five latest local posts. */
-export default function AdminDashboardPage() {
+export default function AdminDashboardPage({ theme = 'light', onToggleTheme } = {}) {
   const session = getCurrentSession();
   const [posts, setPosts] = useState(() => getPosts());
   const users = getUsers();
@@ -52,7 +52,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-[100dvh] bg-[#fbfaf7] text-stone-900">
-      <Navbar session={session} />
+      <Navbar session={session} theme={theme} onToggleTheme={onToggleTheme} />
       {warning && <p className="border-b border-amber-300 bg-amber-50 px-5 py-3 text-center text-sm text-amber-950" role="status">{warning}</p>}
       <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
         <section aria-labelledby="admin-title" className="rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-8 text-white shadow-sm sm:px-9 sm:py-10">

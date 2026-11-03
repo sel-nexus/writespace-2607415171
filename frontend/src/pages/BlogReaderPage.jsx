@@ -20,7 +20,7 @@ function formatDate(createdAt) {
 }
 
 /** Render one full local post and only the actions allowed to its owner. */
-export default function BlogReaderPage() {
+export default function BlogReaderPage({ theme = 'light', onToggleTheme } = {}) {
   const { id } = useParams();
   const navigate = useNavigate();
   const session = getCurrentSession();
@@ -44,7 +44,7 @@ export default function BlogReaderPage() {
   if (!post) {
     return (
       <div className="min-h-[100dvh] bg-[#fbfaf7] text-stone-900">
-        <Navbar session={session} />
+        <Navbar session={session} theme={theme} onToggleTheme={onToggleTheme} />
         <main className="mx-auto max-w-3xl px-5 py-16 sm:px-8">
           <h1 className="font-display text-4xl font-medium">Post not found</h1>
           <p className="mt-3 text-stone-600">This post may have been removed from this browser.</p>
@@ -56,7 +56,7 @@ export default function BlogReaderPage() {
 
   return (
     <div className="min-h-[100dvh] bg-[#fbfaf7] text-stone-900">
-      <Navbar session={session} />
+      <Navbar session={session} theme={theme} onToggleTheme={onToggleTheme} />
       {warning && <p className="border-b border-amber-300 bg-amber-50 px-5 py-3 text-center text-sm text-amber-950" role="status">{warning}</p>}
       <main className="mx-auto max-w-3xl px-5 py-12 sm:px-8 sm:py-16">
         <Link className="text-sm font-semibold text-indigo-800 underline underline-offset-4" to="/blogs">Back to All Posts</Link>

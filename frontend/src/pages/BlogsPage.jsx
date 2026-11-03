@@ -35,7 +35,7 @@ function formatDate(createdAt) {
 }
 
 /** Render all locally saved posts for an authenticated reader. */
-export default function BlogsPage() {
+export default function BlogsPage({ theme = 'light', onToggleTheme } = {}) {
   const session = getCurrentSession();
   const posts = newestPosts(getPosts());
   const users = getUsers();
@@ -43,7 +43,7 @@ export default function BlogsPage() {
 
   return (
     <div className="min-h-[100dvh] bg-[#fbfaf7] text-stone-900">
-      <Navbar session={session} />
+      <Navbar session={session} theme={theme} onToggleTheme={onToggleTheme} />
       {warning && <p className="border-b border-amber-300 bg-amber-50 px-5 py-3 text-center text-sm text-amber-950" role="status">{warning}</p>}
       <main className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
         <header className="flex flex-wrap items-end justify-between gap-5">

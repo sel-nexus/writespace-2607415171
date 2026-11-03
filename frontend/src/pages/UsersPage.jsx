@@ -10,7 +10,7 @@ import { getStorageWarning } from '../utils/storage.js';
 const initialForm = { displayName: '', username: '', password: '', role: 'user' };
 
 /** Render local account creation and deletion controls for an administrator. */
-export default function UsersPage() {
+export default function UsersPage({ theme = 'light', onToggleTheme } = {}) {
   const session = getCurrentSession();
   const [users, setUsers] = useState(() => getManagedUsers());
   const [form, setForm] = useState(initialForm);
@@ -59,7 +59,7 @@ export default function UsersPage() {
 
   return (
     <div className="min-h-[100dvh] bg-[#fbfaf7] text-stone-900">
-      <Navbar session={session} />
+      <Navbar session={session} theme={theme} onToggleTheme={onToggleTheme} />
       {warning && (
         <p
           className="border-b border-amber-300 bg-amber-50 px-5 py-3 text-center text-sm text-amber-950"
