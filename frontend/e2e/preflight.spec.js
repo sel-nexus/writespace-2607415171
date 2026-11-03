@@ -88,7 +88,7 @@ test('captures representative desktop and mobile WriteSpace interface evidence',
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Open navigation menu' }).click();
   await expect(page.getByRole('navigation', { name: 'Authenticated navigation' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Users' })).toBeVisible();
+  await expect(page.locator('#authenticated-mobile-menu').getByRole('link', { name: 'Users', exact: true })).toBeVisible();
   await capturePageEvidence(page, testInfo, 'preflight-admin-mobile-nav-open');
   assertNoErrors();
 });

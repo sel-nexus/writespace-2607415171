@@ -62,8 +62,13 @@ test('reader shows no edit or delete actions on another author’s post', async 
 
   await expect(page.getByRole('heading', { name: 'A different view' })).toBeVisible();
   await expect(page.getByText('Another author’s full story.')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Back to All Posts' })).toBeVisible();
+  const backLinks = page.getByRole('link', { name: 'Back to All Posts', exact: true });
+  await expect(backLinks).toHaveCount(2);
+  await expect(backLinks.first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Delete' })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Edit' })).toHaveCount(0);
+  await backLinks.first().click();
+  await expect(page).toHaveURL(/\/blogs$/);
+  await expect(page.getByRole('link', { name: 'A different view', exact: true })).toBeVisible();
   assertNoErrors();
 });

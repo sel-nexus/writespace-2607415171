@@ -1,3 +1,4 @@
+/** Verify auth validation, role routing, and inherited theme presentation. */
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router-dom';
@@ -10,7 +11,11 @@ const browserStorage = window.localStorage;
 /** Expose the current test route for assertions after form submissions. */
 function RouteProbe() {
   const location = useLocation();
-  return <p aria-label="Current route" className="sr-only">{location.pathname}</p>;
+  return (
+    <p aria-label="Current route" className="sr-only">
+      {location.pathname}
+    </p>
+  );
 }
 
 /** Render a route and a screen-reader-visible route probe for form tests. */
@@ -35,7 +40,8 @@ describe('authentication pages', () => {
     Object.defineProperty(window, 'localStorage', { configurable: true, value: browserStorage });
   });
 
-  it('shows the demo-only warning and a generic inline error for invalid login credentials', async () => {
+  it.each(['light', 'dark'])('shows the demo-only warning and a generic inline error for invalid login credentials in %s theme', async (theme) => {
+    browserStorage.setItem('writespace_theme', theme);
     const user = userEvent.setup();
     renderRoute('/login');
 
@@ -46,6 +52,8 @@ describe('authentication pages', () => {
     await user.click(screen.getByRole('button', { name: 'Login' }));
 
     expect(screen.getByRole('alert')).toHaveTextContent('Invalid username or password.');
+    expect(browserStorage.getItem('writespace_session')).toBeNull();
+    expect(screen.getByRole('alert')).toHaveClass('dark:bg-slate-800', 'dark:text-red-300');
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/login');
   });
 
@@ -62,7 +70,8 @@ describe('authentication pages', () => {
     expect(screen.getByRole('note', { name: 'Demo security notice' })).toBeInTheDocument();
   });
 
-  it('signs in with demo admin credentials and routes to the admin dashboard', async () => {
+  it.each(['light', 'dark'])('signs in with demo admin credentials and routes to the admin dashboard in %s theme', async (theme) => {
+    browserStorage.setItem('writespace_theme', theme);
     const user = userEvent.setup();
     renderRoute('/login');
 
@@ -71,9 +80,11 @@ describe('authentication pages', () => {
     await user.click(screen.getByRole('button', { name: 'Login' }));
 
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/admin');
+    expect(JSON.parse(browserStorage.getItem('writespace_session'))).toMatchObject({ username: 'admin', role: 'admin' });
   });
 
-  it('registers a standard account and routes to the authenticated blog destination', async () => {
+  it.each(['light', 'dark'])('registers a standard account and routes to the authenticated blog destination in %s theme', async (theme) => {
+    browserStorage.setItem('writespace_theme', theme);
     const user = userEvent.setup();
     renderRoute('/register');
 
@@ -86,9 +97,11 @@ describe('authentication pages', () => {
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/blogs');
     expect(getUsers()).toHaveLength(1);
     expect(getUsers()[0]).toMatchObject({ displayName: 'Casey Writer', username: 'casey', role: 'user' });
+    expect(JSON.parse(browserStorage.getItem('writespace_session'))).toMatchObject({ username: 'casey', role: 'user' });
   });
 
-  it('shows linked field errors and does not register duplicate or mismatched accounts', async () => {
+  it.each(['light', 'dark'])('shows linked field errors and does not register duplicate or mismatched accounts in %s theme', async (theme) => {
+    browserStorage.setItem('writespace_theme', theme);
     const user = userEvent.setup();
     saveUsers([{ id: 'existing', displayName: 'Casey', username: 'casey', password: 'demo', role: 'user' }]);
     renderRoute('/register');
@@ -101,12 +114,16 @@ describe('authentication pages', () => {
 
     expect(screen.getByText('That username is already taken.')).toBeInTheDocument();
     expect(screen.getByText('Passwords do not match.')).toBeInTheDocument();
+    expect(screen.getByText('Passwords do not match.')).toHaveClass('dark:text-red-300');
+    expect(screen.getByLabelText('Confirm Password')).toHaveAttribute('aria-describedby', 'register-confirmPassword-error');
+    expect(browserStorage.getItem('writespace_session')).toBeNull();
     expect(screen.getByLabelText('Username')).toHaveAttribute('aria-invalid', 'true');
     expect(getUsers()).toHaveLength(1);
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/register');
   });
 
-  it('redirects an already-authenticated visitor away from login or registration by role', () => {
+  it.each(['light', 'dark'])('redirects an already-authenticated visitor away from login or registration by role in %s theme', (theme) => {
+    browserStorage.setItem('writespace_theme', theme);
     localStorage.setItem('writespace_session', JSON.stringify({ userId: 'admin', username: 'admin', displayName: 'WriteSpace Administrator', role: 'admin' }));
     const { unmount } = renderRoute('/login');
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/admin');
@@ -116,4 +133,46 @@ describe('authentication pages', () => {
     renderRoute('/register');
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/blogs');
   });
+
+  it.each(['/login', '/register'])('renders dark form surfaces and associated required errors on %s', async (path) => {
+    browserStorage.setItem('writespace_theme', 'dark');
+    const user = userEvent.setup();
+    renderRoute(path);
+
+    expect(document.documentElement).toHaveClass('dark');
+    expect(screen.getByRole('main')).toHaveClass('dark:bg-slate-950', 'dark:text-slate-100');
+    expect(screen.getByRole('region')).toHaveClass('dark:bg-slate-900', 'dark:border-slate-700');
+    expect(screen.getByRole('note', { name: 'Demo security notice' })).toHaveClass(
+      'dark:bg-slate-800', 'dark:text-amber-200', 'dark:border-amber-700', 'mt-6',
+    );
+    const labels = path === '/login'
+      ? ['Username', 'Password']
+      : ['Display Name', 'Username', 'Password', 'Confirm Password'];
+    for (const label of labels) {
+      expect(screen.getByLabelText(label)).toHaveClass(
+        'dark:bg-slate-800', 'dark:text-slate-100', 'dark:border-slate-600',
+        'dark:focus:border-indigo-300', 'dark:focus-visible:ring-indigo-300',
+      );
+      expect(screen.getByText(label, { selector: 'label' })).toHaveClass('dark:text-slate-200');
+    }
+    if (path === '/login') {
+      expect(screen.getByText(/Demo admin credentials/)).toHaveClass('dark:bg-slate-800', 'dark:text-slate-200');
+    }
+    expect(screen.getByRole('link', { name: path === '/login' ? 'Register' : 'Login' })).toHaveClass(
+      'dark:text-indigo-300', 'dark:focus-visible:outline-indigo-300',
+    );
+    await user.click(screen.getByRole('button', { name: path === '/login' ? 'Login' : 'Create account' }));
+    for (const label of labels) {
+      const input = screen.getByLabelText(label);
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+      const error = document.getElementById(input.getAttribute('aria-describedby'));
+      expect(error).toHaveAttribute('role', 'alert');
+      expect(error).toHaveClass('dark:text-red-300');
+      expect(error).not.toBeEmptyDOMElement();
+    }
+    expect(screen.getByLabelText('Current route')).toHaveTextContent(path);
+    expect(getUsers()).toHaveLength(0);
+    expect(browserStorage.getItem('writespace_session')).toBeNull();
+  });
+
 });

@@ -1,3 +1,4 @@
+/** Render browser-local authentication with inherited light and dark presentation. */
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import DemoWarning from '../components/DemoWarning.jsx';
@@ -32,11 +33,14 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-[100dvh] bg-[#fbfaf7] px-5 py-12 text-stone-900 sm:px-8">
+    <main className="min-h-[100dvh] bg-[#fbfaf7] px-5 py-12 text-stone-900 dark:bg-slate-950 dark:text-slate-100 sm:px-8">
       <div className="mx-auto max-w-md">
         {storageWarning && (
           <p
-            className="mb-5 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950"
+            className={
+              "mb-5 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 " +
+              "dark:border-amber-700 dark:bg-slate-800 dark:text-amber-200"
+            }
             role="status"
           >
             {storageWarning}
@@ -44,26 +48,42 @@ export default function LoginPage() {
         )}
         <Link
           aria-label="WriteSpace home"
-          className="font-semibold tracking-tight text-stone-900"
+          className={
+            "font-semibold tracking-tight text-stone-900 dark:text-slate-100 " +
+            "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 " +
+            "focus-visible:outline-indigo-700 dark:focus-visible:outline-indigo-300"
+          }
           to="/"
         >
           WriteSpace
         </Link>
         <section
           aria-labelledby="login-title"
-          className="mt-8 rounded-2xl border border-stone-200 bg-white p-7 shadow-sm sm:p-9"
+          className={
+            "mt-8 rounded-2xl border border-stone-200 bg-white p-7 shadow-sm " +
+            "dark:border-slate-700 dark:bg-slate-900 sm:p-9"
+          }
         >
           <h1 className="font-display text-3xl font-medium tracking-tight" id="login-title">
             Welcome back
           </h1>
-          <p className="mt-2 text-sm leading-6 text-stone-600">Sign in to read and write in this browser.</p>
+          <p className="mt-2 text-sm leading-6 text-stone-600 dark:text-slate-300">
+            Sign in to read and write in this browser.
+          </p>
           <DemoWarning className="mt-6" />
-          <p className="mt-5 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-            Demo admin credentials: <code>admin</code> / <code>admin</code>
+          <p className="mt-5 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+            Demo admin credentials:{' '}
+            <code>
+              admin
+            </code>{' '}
+            /{' '}
+            <code>
+              admin
+            </code>
           </p>
           <form className="mt-6 space-y-5" onSubmit={handleSubmit} noValidate>
             <div>
-              <label className="block text-sm font-medium text-stone-800" htmlFor="login-username">
+              <label className="block text-sm font-medium text-stone-800 dark:text-slate-200" htmlFor="login-username">
                 Username
               </label>
               <input
@@ -73,7 +93,9 @@ export default function LoginPage() {
                 autoComplete="username"
                 className={
                   "mt-2 w-full rounded-lg border border-stone-300 px-3 py-3 text-stone-900 " +
-                  "focus:border-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-700"
+                  "dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 " +
+                  "focus:border-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-700 " +
+                  "dark:focus:border-indigo-300 dark:focus-visible:ring-indigo-300"
                 }
                 id="login-username"
                 name="username"
@@ -81,13 +103,13 @@ export default function LoginPage() {
                 value={username}
               />
               {errors.username && (
-                <p className="mt-1 text-sm text-red-700" id="login-username-error" role="alert">
+                <p className="mt-1 text-sm text-red-700 dark:text-red-300" id="login-username-error" role="alert">
                   {errors.username}
                 </p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-stone-800" htmlFor="login-password">
+              <label className="block text-sm font-medium text-stone-800 dark:text-slate-200" htmlFor="login-password">
                 Password
               </label>
               <input
@@ -97,7 +119,9 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 className={
                   "mt-2 w-full rounded-lg border border-stone-300 px-3 py-3 text-stone-900 " +
-                  "focus:border-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-700"
+                  "dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 " +
+                  "focus:border-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-700 " +
+                  "dark:focus:border-indigo-300 dark:focus-visible:ring-indigo-300"
                 }
                 id="login-password"
                 name="password"
@@ -106,29 +130,37 @@ export default function LoginPage() {
                 value={password}
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-red-700" id="login-password-error" role="alert">
+                <p className="mt-1 text-sm text-red-700 dark:text-red-300" id="login-password-error" role="alert">
                   {errors.password}
                 </p>
               )}
             </div>
             {formError && (
-              <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800" role="alert">
+              <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-slate-800 dark:text-red-300" role="alert">
                 {formError}
               </p>
             )}
             <button
               className={
                 "w-full rounded-lg bg-indigo-700 px-5 py-3 font-semibold text-white hover:bg-indigo-800 " +
-                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700 " +
+                "dark:focus-visible:outline-indigo-300"
               }
               type="submit"
             >
               Login
             </button>
           </form>
-          <p className="mt-6 text-sm text-stone-600">
+          <p className="mt-6 text-sm text-stone-600 dark:text-slate-300">
             New to WriteSpace?{' '}
-            <Link className="font-semibold text-indigo-800 underline underline-offset-4" to="/register">
+            <Link
+              className={
+                "font-semibold text-indigo-800 underline underline-offset-4 dark:text-indigo-300 " +
+                "dark:hover:text-indigo-200 focus-visible:outline focus-visible:outline-2 " +
+                "focus-visible:outline-offset-2 focus-visible:outline-indigo-700 dark:focus-visible:outline-indigo-300"
+              }
+              to="/register"
+            >
               Register
             </Link>
           </p>

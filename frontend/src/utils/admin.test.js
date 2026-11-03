@@ -7,7 +7,7 @@ import {
   getRecentPosts,
   validateManagedUser,
 } from './admin.js';
-import { getPosts, getUsers, savePosts, saveUsers } from './storage.js';
+import { getPosts, getSession, getUsers, savePosts, saveUsers, setSession } from './storage.js';
 
 const administrator = { userId: 'admin', username: 'admin', displayName: 'WriteSpace Administrator', role: 'admin' };
 const standardUser = { userId: 'user-1', username: 'ari', displayName: 'Ari Reader', role: 'user' };
@@ -64,6 +64,48 @@ describe('administrator account and dashboard operations', () => {
     expect(users[0]).toMatchObject({ id: 'admin', username: 'admin', role: 'admin', isDefault: true });
     expect(users[0]).not.toHaveProperty('password');
     expect(users.slice(1)).toEqual(storedUsers);
+  });
+
+  it.each([
+    ['null', null],
+    ['object', {}],
+    ['string', 'not an array'],
+  ])('returns only the password-free default admin projection for %s users', (_, users) => {
+    expect(getManagedUsers(users)).toEqual([{
+      id: 'admin',
+      username: 'admin',
+      displayName: 'WriteSpace Administrator',
+      role: 'admin',
+      createdAt: '2026-03-04T12:00:00.000Z',
+      isDefault: true,
+    }]);
+  });
+
+  it.each(['displayName', 'username', 'password', 'role'].flatMap((field) => [
+    { field, kind: 'omitted', value: undefined },
+    { field, kind: 'null', value: null },
+    { field, kind: 'nonstring', value: 42 },
+  ]))('rejects managed account with $kind $field without changing users or session', ({ field, kind, value }) => {
+    saveUsers(storedUsers);
+    setSession(administrator);
+    const form = { displayName: 'Taylor', username: 'taylor', password: 'demo-pass', role: 'user' };
+    if (kind === 'omitted') {
+      delete form[field];
+    } else {
+      form[field] = value;
+    }
+    const messages = {
+      displayName: 'Display name is required.',
+      username: 'Username is required.',
+      password: 'Password is required.',
+      role: 'Choose a valid account role.',
+    };
+    const errors = { [field]: messages[field] };
+
+    expect(validateManagedUser(form)).toEqual(errors);
+    expect(createManagedUser(form, administrator)).toEqual({ success: false, errors });
+    expect(getUsers()).toEqual(storedUsers);
+    expect(getSession()).toEqual(administrator);
   });
 
   it('rejects missing fields, invalid roles, the reserved admin name and case-insensitive duplicates', () => {

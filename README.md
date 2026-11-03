@@ -72,6 +72,14 @@ docker run --rm -p 8080:80 writespace-static
 
 The container serves the SPA at `/`, falls back to the client app for routes, and exposes `/healthz`.
 
+## Theme and editor enhancements
+
+Use the named Light mode / Dark mode control in public or authenticated navigation. The preference defaults to light when absent, invalid, or unreadable; only `writespace_theme` is added to localStorage. It survives refresh and logout when storage works, does not follow the OS setting, and updates without reloading. Storage failure does not prevent switching appearance.
+
+The existing editor character count remains informational and updates while composing/editing. Content has no maximum length; the inherited 140-character title limit is unchanged.
+
+Change-run verification: 196 unit/component tests passed; production build passed; independent test critic passed (1.00, zero high failures). Chromium captured 28 desktop/mobile views in both themes. **E2E journeys are unverified:** the Playwright runner hung before test collection on three attempts; proceeding was approved with this warning. Existing dependency audit findings and a padded-role helper normalization discrepancy are disclosed in CHANGELOG.md.
+
 ## Product contract
 
 See [`PLAN.md`](PLAN.md) for the implementation decisions and inventory. The application intentionally has no backend, API, server database, remote identity provider, or cross-device synchronization.

@@ -25,3 +25,9 @@ graphify-out/.graphify_python
 graphify-out/.graphify_root
 graphify-out/GRAPH_REPORT.md
 graphify-out/graph.html
+frontend/ui-evidence/
+frontend/ui-preflight.txt
+frontend/e2e-run.log
+UI-evidence.zip
+UI-review.md
+ui-preflight.mjs

@@ -8,7 +8,11 @@ import { getPosts, getUsers, savePosts, saveUsers, setSession } from '../utils/s
 /** Expose the current route for protected page redirect assertions. */
 function RouteProbe() {
   const location = useLocation();
-  return <p aria-label="Current route" className="sr-only">{location.pathname}</p>;
+  return (
+    <p aria-label="Current route" className="sr-only">
+      {location.pathname}
+    </p>
+  );
 }
 
 /** Render WriteSpace at a requested route and expose its current path. */
@@ -43,12 +47,14 @@ function resetAdminState() {
   })));
 }
 
-describe('administrator pages', () => {
+describe.each(['light', 'dark'])('administrator pages in %s mode', (theme) => {
   beforeEach(() => {
     resetAdminState();
+    localStorage.setItem('writespace_theme', theme);
   });
 
   afterEach(() => {
+    document.documentElement.classList.remove('dark');
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
@@ -169,6 +175,97 @@ describe('administrator pages', () => {
     expect(getUsers().map((savedUser) => savedUser.id)).toEqual(['reader-1', 'admin-2']);
     expect(getPosts()).toEqual([authored]);
     expect(screen.getByRole('status')).toHaveTextContent('Their posts remain saved.');
+  });
+
+  it('associates required-field errors and clears feedback without changing saved users', async () => {
+    const user = userEvent.setup();
+    renderRoute('/users');
+    const usersBefore = getUsers();
+    await user.click(screen.getByRole('button', { name: 'Create account' }));
+
+    for (const [label, id, message] of [
+      ['Display Name', 'admin-display-name-error', 'Display name is required.'],
+      ['Username', 'admin-username-error', 'Username is required.'],
+      ['Password', 'admin-password-error', 'Password is required.'],
+    ]) {
+      expect(screen.getByLabelText(label)).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByLabelText(label)).toHaveAttribute('aria-describedby', id);
+      expect(screen.getByText(message)).toHaveAttribute('role', 'alert');
+      expect(screen.getByText(message)).toHaveClass('dark:text-red-300');
+    }
+    expect(getUsers()).toEqual(usersBefore);
+    await user.type(screen.getByLabelText('Display Name'), 'Valid name');
+    expect(screen.queryByText('Display name is required.')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Display Name')).toHaveAttribute('aria-invalid', 'false');
+    expect(getUsers()).toEqual(usersBefore);
+  });
+
+  it('keeps form, table, mobile cards and safeguards themed while toggling appearance', async () => {
+    const user = userEvent.setup();
+    setSession({ userId: 'admin-2', username: 'morgan', displayName: 'Morgan Admin', role: 'admin' });
+    const { container } = renderRoute('/users');
+    const accounts = screen.getByRole('region', { name: 'Accounts' });
+    expect(container.firstChild).toHaveClass('dark:bg-slate-950', 'dark:text-slate-100');
+    expect(screen.getByRole('region', { name: 'Add an account' })).toHaveClass('dark:bg-slate-900');
+    for (const label of ['Display Name', 'Username', 'Password', 'Role']) {
+      expect(screen.getByLabelText(label)).toHaveClass('dark:bg-slate-800', 'dark:text-slate-100');
+    }
+    expect(within(accounts).getByRole('table').parentElement).toHaveClass('dark:bg-slate-900');
+    expect(within(accounts).getAllByRole('article')).toHaveLength(4);
+    for (const card of within(accounts).getAllByRole('article')) {
+      expect(card).toHaveClass('dark:bg-slate-900', 'dark:border-slate-700');
+    }
+    for (const button of screen.getAllByRole('button', { name: 'Delete Morgan Admin' })) {
+      expect(button).toBeDisabled();
+      expect(button).toHaveAttribute('title', 'You cannot delete your own account.');
+      expect(button).toHaveClass('dark:text-red-300');
+    }
+    await user.type(screen.getByLabelText('Username'), 'unfinished');
+    await user.click(screen.getByRole('button', { name: `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode` }));
+    expect(screen.getByLabelText('Username')).toHaveValue('unfinished');
+    expect(screen.getByLabelText('Current route')).toHaveTextContent('/users');
+    expect(localStorage.getItem('writespace_theme')).toBe(theme === 'dark' ? 'light' : 'dark');
+  });
+
+  it('cancels account and post deletion without changing storage and re-reads retained data', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const usersBefore = getUsers();
+    const postsBefore = getPosts();
+    const view = renderRoute('/users');
+    await user.click(screen.getAllByRole('button', { name: 'Delete Riley Writer' })[0]);
+    expect(getUsers()).toEqual(usersBefore);
+    expect(getPosts()).toEqual(postsBefore);
+    expect(screen.getAllByText('Riley Writer')).toHaveLength(2);
+    view.unmount();
+    const dashboard = renderRoute('/admin');
+    await user.click(within(screen.getByRole('region', { name: 'Recent posts' })).getAllByRole('button', { name: 'Delete' })[0]);
+    expect(getPosts()).toEqual(postsBefore);
+    dashboard.unmount();
+    renderRoute('/admin');
+    expect(screen.getByRole('link', { name: 'Post 6' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Total Posts' }).parentElement).toHaveTextContent('6');
+  });
+
+  it('re-reads a created standard account after remount and keeps the dashboard empty state readable', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('crypto', { randomUUID: vi.fn(() => 'new-reader') });
+    const view = renderRoute('/users');
+    await user.type(screen.getByLabelText('Display Name'), 'New Reader');
+    await user.type(screen.getByLabelText('Username'), 'newreader');
+    await user.type(screen.getByLabelText('Password'), 'demo-only');
+    await user.click(screen.getByRole('button', { name: 'Create account' }));
+    expect(getUsers()).toContainEqual(expect.objectContaining({ id: 'new-reader', role: 'user' }));
+    expect(screen.getByLabelText('Display Name')).toHaveValue('');
+    expect(screen.getByRole('status')).toHaveClass('dark:text-emerald-200');
+    view.unmount();
+    const remount = renderRoute('/users');
+    expect(screen.getAllByText('New Reader')).toHaveLength(2);
+    remount.unmount();
+    savePosts([]);
+    renderRoute('/admin');
+    expect(screen.getByText('No posts yet. Create a post to start the community.')).toHaveClass('dark:bg-slate-900/70', 'dark:text-slate-300');
+    expect(screen.getByRole('heading', { name: 'Total Posts' }).parentElement).toHaveTextContent('0');
   });
 
   it('denies account management to a standard user', () => {
