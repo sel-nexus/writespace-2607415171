@@ -8,7 +8,11 @@ import { clearSession, getPosts, savePosts, saveUsers, setSession } from '../uti
 /** Display the current route for deterministic client navigation assertions. */
 function RouteProbe() {
   const location = useLocation();
-  return <p aria-label="Current route" className="sr-only">{location.pathname}</p>;
+  return (
+    <p aria-label="Current route" className="sr-only">
+      {location.pathname}
+    </p>
+  );
 }
 
 /** Render the application at a selected route for reading behavior tests. */
@@ -157,6 +161,59 @@ describe('authenticated blog reading', () => {
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(JSON.parse(localStorage.getItem('writespace_posts'))).toEqual([otherPost]);
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/blogs');
+  });
+
+  it('uses dark cards and metadata while keeping owner-only controls and reading navigation', async () => {
+    localStorage.setItem('writespace_theme', 'dark');
+    const user = userEvent.setup();
+    renderRoute('/blogs');
+    const cards = screen.getByRole('region', { name: 'All posts' });
+    const ownCard = within(cards).getByRole('heading', { name: ownPost.title }).closest('article');
+    expect(ownCard).toHaveClass('dark:bg-slate-900', 'dark:border-slate-700');
+    expect(within(ownCard).getByText(/Apr 03, 2026/).parentElement).toHaveClass('dark:text-slate-400');
+    expect(within(cards).queryByRole('link', { name: `Edit ${otherPost.title}` })).not.toBeInTheDocument();
+    await user.click(within(cards).getByRole('link', { name: otherPost.title }));
+    expect(screen.getByText(otherPost.content)).toHaveClass('dark:text-slate-200');
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Edit', exact: true })).not.toBeInTheDocument();
+    expect(getPosts()).toEqual([ownPost, otherPost]);
+    await user.click(screen.getAllByRole('link', { name: 'Back to All Posts' })[0]);
+    expect(screen.getByLabelText('Current route')).toHaveTextContent('/blogs');
+  });
+
+  it('preserves records on dark delete cancellation and removes only the owned record on confirmation', async () => {
+    localStorage.setItem('writespace_theme', 'dark');
+    const user = userEvent.setup();
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    renderRoute('/blog/own-post');
+    const remove = screen.getByRole('button', { name: 'Delete' });
+    expect(remove).toHaveClass('dark:text-red-300', 'dark:bg-red-950/50', 'dark:focus-visible:outline-red-400');
+    await user.click(remove);
+    expect(getPosts()).toEqual([ownPost, otherPost]);
+    expect(screen.getByLabelText('Current route')).toHaveTextContent('/blog/own-post');
+    confirm.mockReturnValue(true);
+    await user.click(remove);
+    expect(JSON.parse(localStorage.getItem('writespace_posts'))).toEqual([otherPost]);
+    expect(screen.queryByRole('heading', { name: ownPost.title })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: otherPost.title })).toBeInTheDocument();
+  });
+
+  it('covers dark empty, missing reader and route fallback surfaces without changing storage', () => {
+    localStorage.setItem('writespace_theme', 'dark');
+    savePosts([]);
+    const empty = renderRoute('/blogs');
+    const emptySection = screen.getByRole('heading', { name: 'No blogs yet. Be the first to write one!' }).closest('section');
+    expect(emptySection).toHaveClass('dark:bg-slate-900/70', 'dark:border-slate-600');
+    empty.unmount();
+    const missing = renderRoute('/blog/missing');
+    expect(screen.getByRole('heading', { name: 'Post not found' }).closest('div')).toHaveClass('dark:bg-slate-950');
+    expect(screen.getByRole('link', { name: 'Back to All Posts' })).toHaveClass('dark:text-indigo-300');
+    missing.unmount();
+    renderRoute('/unknown-writing-route');
+    expect(screen.getByRole('main')).toHaveClass('dark:bg-slate-950', 'dark:text-slate-100');
+    expect(screen.getByRole('region', { name: 'Page not found' })).toHaveClass('dark:bg-slate-900');
+    expect(screen.getByRole('link', { name: 'Login', exact: true })).toHaveClass('dark:text-slate-200');
+    expect(getPosts()).toEqual([]);
   });
 
   it('allows an administrator to manage another user’s post', () => {
