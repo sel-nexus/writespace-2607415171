@@ -35,6 +35,64 @@ describe('browser-local identity', () => {
     expect(validateLogin('', '')).toEqual({ username: 'Username is required.', password: 'Password is required.' });
   });
 
+  it.each([
+    ['null session', null],
+    ['unsupported role', { role: 'owner' }],
+  ])('returns the login fallback for %s', (_, session) => {
+    expect(getHomeRoute(session)).toBe('/login');
+  });
+
+  it.each(['username', 'password'].flatMap((field) => [
+    { field, kind: 'omitted', value: undefined },
+    { field, kind: 'null', value: null },
+    { field, kind: 'nonstring', value: 42 },
+  ]))('rejects login with $kind $field without changing users or session', ({ field, kind, value }) => {
+    const users = [{ id: 'user-1', displayName: 'Ari', username: 'ari', password: 'pw', role: 'user' }];
+    const session = { userId: 'user-1', displayName: 'Ari', username: 'ari', role: 'user' };
+    saveUsers(users);
+    setSession(session);
+    const form = { username: 'admin', password: 'admin' };
+    if (kind === 'omitted') {
+      delete form[field];
+    } else {
+      form[field] = value;
+    }
+    const errors = { [field]: field === 'username' ? 'Username is required.' : 'Password is required.' };
+
+    expect(validateLogin(form.username, form.password)).toEqual(errors);
+    expect(login(form.username, form.password)).toEqual({ success: false, errors });
+    expect(getUsers()).toEqual(users);
+    expect(getSession()).toEqual(session);
+  });
+
+  it.each(['displayName', 'username', 'password', 'confirmPassword'].flatMap((field) => [
+    { field, kind: 'omitted', value: undefined },
+    { field, kind: 'null', value: null },
+    { field, kind: 'nonstring', value: 42 },
+  ]))('rejects registration with $kind $field without changing users or session', ({ field, kind, value }) => {
+    const users = [{ id: 'user-1', displayName: 'Ari', username: 'ari', password: 'pw', role: 'user' }];
+    const session = { userId: 'user-1', displayName: 'Ari', username: 'ari', role: 'user' };
+    saveUsers(users);
+    setSession(session);
+    const form = { displayName: 'Taylor', username: 'taylor', password: 'demo-pass', confirmPassword: 'demo-pass' };
+    if (kind === 'omitted') {
+      delete form[field];
+    } else {
+      form[field] = value;
+    }
+    const fieldErrors = {
+      displayName: { displayName: 'Display name is required.' },
+      username: { username: 'Username is required.' },
+      password: { password: 'Password is required.', confirmPassword: 'Passwords do not match.' },
+      confirmPassword: { confirmPassword: 'Please confirm your password.' },
+    };
+
+    expect(validateRegistration(form)).toEqual(fieldErrors[field]);
+    expect(register(form)).toEqual({ success: false, errors: fieldErrors[field] });
+    expect(getUsers()).toEqual(users);
+    expect(getSession()).toEqual(session);
+  });
+
   it('authenticates the built-in admin and persists its stable session identity', () => {
     const result = login('ADMIN', 'admin');
 

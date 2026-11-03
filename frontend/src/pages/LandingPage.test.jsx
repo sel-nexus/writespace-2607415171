@@ -92,6 +92,39 @@ describe('WriteSpace public home', () => {
     expect(screen.getByRole('status')).toHaveTextContent(/temporary in-memory data/i);
   });
 
+  it('orders invalid and missing dates after dated writing and shows their neutral date fallback', () => {
+    savePosts([
+      { id: 'invalid', title: 'Invalid date story', createdAt: 'not a date', excerpt: 'Invalid date excerpt.' },
+      { id: 'missing', title: 'Undated story', excerpt: 'Undated excerpt.' },
+      { id: 'dated', title: 'Dated story', publishedAt: '2026-04-15T12:00:00.000Z', excerpt: 'Dated excerpt.' },
+    ]);
+    renderApp();
+
+    const latest = screen.getByRole('heading', { name: 'Latest writing' }).closest('section');
+    expect(within(latest).getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)).toEqual([
+      'Dated story', 'Invalid date story', 'Undated story',
+    ]);
+    expect(within(latest).getByText('Apr 15, 2026')).toBeInTheDocument();
+    for (const title of ['Invalid date story', 'Undated story']) {
+      const article = within(latest).getByRole('link', { name: title }).closest('article');
+      expect(within(article).getByText('A recent story')).toBeInTheDocument();
+    }
+  });
+
+  it.each([
+    ['short content', { content: '  A brief local story.  ' }, 'A brief local story.'],
+    ['long content', { content: `${'a'.repeat(149)} trailing content` }, `${'a'.repeat(149)}…`],
+    ['absent excerpt and content', {}, 'Open this story to read more.'],
+  ])('renders the exact excerpt fallback for %s in the preview and latest writing', (_, fields, expected) => {
+    savePosts([{ id: 'excerpt-story', title: 'Excerpt story', ...fields }]);
+    renderApp();
+
+    const preview = screen.getByRole('complementary', { name: 'Local writing preview' });
+    const latest = screen.getByRole('heading', { name: 'Latest writing' }).closest('section');
+    expect(within(preview).getByText(expected).textContent).toBe(expected);
+    expect(within(latest).getByText(expected).textContent).toBe(expected);
+  });
+
   it('keeps rendering with a visible warning when browser storage access is denied', () => {
     Object.defineProperty(window, 'localStorage', {
       configurable: true,

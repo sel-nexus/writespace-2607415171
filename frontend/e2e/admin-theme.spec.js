@@ -128,3 +128,99 @@ for (const width of [1280, 375]) {
     assertNoErrors();
   });
 }
+
+for (const width of [1280, 375]) {
+  test(`dark admin manages another author's post through dashboard, card and reader at ${width}px`, async ({ page }) => {
+    const assertNoErrors = monitorErrors(page);
+    const original = {
+      id: 'community-owned', title: 'Ari community story', content: 'Original community words.',
+      authorId: 'writer-1', authorName: 'Ari Writer', createdAt: '2026-04-02T12:00:00.000Z',
+    };
+    const untouched = {
+      id: 'keep-story', title: 'Riley keeps this story', content: 'Do not change these words.',
+      authorId: 'writer-2', authorName: 'Riley Writer', createdAt: '2026-04-01T12:00:00.000Z',
+    };
+    const users = [
+      { id: 'writer-1', username: 'ari', displayName: 'Ari Writer', password: 'demo', role: 'user' },
+      { id: 'writer-2', username: 'riley', displayName: 'Riley Writer', password: 'demo', role: 'user' },
+    ];
+    await page.addInitScript(({ posts, users }) => {
+      if (localStorage.getItem('writespace_theme') === null) {
+        localStorage.setItem('writespace_theme', 'dark');
+        localStorage.setItem('writespace_session', JSON.stringify({ userId: 'admin', username: 'admin', displayName: 'WriteSpace Administrator', role: 'admin' }));
+        localStorage.setItem('writespace_posts', JSON.stringify(posts));
+        localStorage.setItem('writespace_users', JSON.stringify(users));
+      }
+    }, { posts: [original, untouched], users });
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/admin');
+    await expect(page.locator('html')).toHaveClass(/dark/);
+    const recent = page.getByRole('region', { name: 'Recent posts' });
+    await expect(recent.getByRole('article')).toHaveCount(2);
+    await recent.getByRole('link', { name: `Edit ${original.title}`, exact: true }).click();
+    await expect(page).toHaveURL(/\/edit\/community-owned$/);
+    await expect(page.getByLabel('Title')).toHaveValue(original.title);
+    await expect(page.getByLabel('Content')).toHaveValue(original.content);
+    await page.getByLabel('Title').fill('Dashboard revision');
+    await page.getByLabel('Content').fill('Revised via administrator dashboard.');
+    await page.getByRole('button', { name: 'Save changes' }).click();
+    await expect(page).toHaveURL(/\/blog\/community-owned$/);
+    const dashboardRevision = { ...original, title: 'Dashboard revision', content: 'Revised via administrator dashboard.' };
+    await expect(page.locator('article')).toContainText('Ari Writer');
+    await expect(page.locator('article p.whitespace-pre-wrap')).toHaveText(dashboardRevision.content);
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('writespace_posts')))).toEqual([dashboardRevision, untouched]);
+    await page.getByRole('link', { name: 'Back to All Posts', exact: true }).click();
+    await page.getByRole('region', { name: 'All posts' }).getByRole('link', { name: `Edit ${dashboardRevision.title}`, exact: true }).click();
+    await expect(page).toHaveURL(/\/edit\/community-owned$/);
+    await expect(page.getByLabel('Title')).toHaveValue(dashboardRevision.title);
+    await expect(page.getByLabel('Content')).toHaveValue(dashboardRevision.content);
+    await page.getByLabel('Content').fill('Revised via blog card.');
+    await page.getByRole('button', { name: 'Save changes' }).click();
+    const cardRevision = { ...dashboardRevision, content: 'Revised via blog card.' };
+    await expect(page).toHaveURL(/\/blog\/community-owned$/);
+    await expect(page.locator('article p.whitespace-pre-wrap')).toHaveText(cardRevision.content);
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('writespace_posts')))).toEqual([cardRevision, untouched]);
+    await page.getByRole('link', { name: 'Edit', exact: true }).click();
+    await expect(page).toHaveURL(/\/edit\/community-owned$/);
+    await expect(page.getByLabel('Content')).toHaveValue(cardRevision.content);
+    await page.getByLabel('Title').fill('Final community revision');
+    await page.getByRole('button', { name: 'Save changes' }).click();
+    const revised = { ...cardRevision, title: 'Final community revision' };
+    await expect(page).toHaveURL(/\/blog\/community-owned$/);
+    await expect(page.getByRole('heading', { name: revised.title })).toBeVisible();
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('writespace_posts')))).toEqual([revised, untouched]);
+    page.once('dialog', (dialog) => dialog.dismiss());
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+    await expect(page).toHaveURL(/\/blog\/community-owned$/);
+    await expect(page.getByRole('heading', { name: revised.title })).toBeVisible();
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('writespace_posts')))).toEqual([revised, untouched]);
+    await page.getByRole('link', { name: 'WriteSpace home' }).click();
+    if (width < 768) {
+      await page.getByRole('link', { name: 'WriteSpace Administrator profile' }).click();
+      await expect(page).toHaveURL(/\/admin$/);
+      await expect(recent.getByRole('link', { name: revised.title, exact: true })).toBeVisible();
+      await page.getByRole('link', { name: 'WriteSpace home' }).click();
+    }
+    await page.getByRole('link', { name: 'Dashboard', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin$/);
+    const target = recent.getByRole('article').filter({ has: page.getByRole('link', { name: revised.title, exact: true }) });
+    page.once('dialog', (dialog) => dialog.dismiss());
+    await target.getByRole('button', { name: 'Delete', exact: true }).click();
+    await expect(target).toBeVisible();
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('writespace_posts')))).toEqual([revised, untouched]);
+    page.once('dialog', (dialog) => dialog.accept());
+    await target.getByRole('button', { name: 'Delete', exact: true }).click();
+    await expect(target).toHaveCount(0);
+    await expect(recent.getByRole('article')).toHaveCount(1);
+    await expect(page.getByRole('heading', { name: 'Total Posts', exact: true }).locator('..').getByRole('status')).toHaveText('1');
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('writespace_posts')))).toEqual([untouched]);
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('writespace_users')))).toEqual(users);
+    await page.reload();
+    await expect(recent.getByRole('link', { name: untouched.title, exact: true })).toBeVisible();
+    await expect(recent.getByRole('link', { name: revised.title, exact: true })).toHaveCount(0);
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('writespace_posts')))).toEqual([untouched]);
+    await expect(page.locator('html')).toHaveClass(/dark/);
+    expect(await page.evaluate(() => localStorage.getItem('writespace_theme'))).toBe('dark');
+    assertNoErrors();
+  });
+}

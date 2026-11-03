@@ -26,13 +26,22 @@ test('visitor registers a local standard account and sees the persisted identity
   await expect(page.getByRole('note', { name: 'Demo security notice' })).toContainText('plain text');
   await page.getByLabel('Display Name').fill('Quinn Writer');
   await page.getByLabel('Username').fill('quinn');
-  await page.getByLabel('Password').fill('demo-pass');
+  await page.getByLabel('Password', { exact: true }).fill('demo-pass');
   await page.getByLabel('Confirm Password').fill('demo-pass');
   await page.getByRole('button', { name: 'Create account' }).click();
 
   await expect(page).toHaveURL(/\/blogs$/);
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('writespace_session') || 'null')?.username)).toBe('quinn');
   await page.reload();
+  await expect(page).toHaveURL(/\/blogs$/);
+  const navigation = page.getByRole('navigation', { name: 'Authenticated navigation' });
+  await expect(navigation.getByText('Quinn Writer', { exact: true })).toBeVisible();
+  await expect(navigation.getByRole('link', { name: 'All Blogs', exact: true })).toBeVisible();
+  await expect(navigation.getByRole('link', { name: 'Write', exact: true })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('writespace_session')))).toMatchObject({ username: 'quinn', displayName: 'Quinn Writer', role: 'user' });
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('writespace_users')).find((user) => user.username === 'quinn'))).toMatchObject({ displayName: 'Quinn Writer', password: 'demo-pass', role: 'user' });
+  await navigation.getByRole('link', { name: 'WriteSpace home' }).click();
+  await expect(page).toHaveURL('/');
   await expect(page.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('href', '/blogs');
   assertNoErrors();
 });
@@ -63,7 +72,7 @@ test('registration rejects duplicate names and mismatched password confirmation'
   await page.goto('/register');
   await page.getByLabel('Display Name').fill('A writer');
   await page.getByLabel('Username').fill('CASEY');
-  await page.getByLabel('Password').fill('first');
+  await page.getByLabel('Password', { exact: true }).fill('first');
   await page.getByLabel('Confirm Password').fill('second');
   await page.getByRole('button', { name: 'Create account' }).click();
 
